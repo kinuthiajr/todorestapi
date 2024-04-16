@@ -33,4 +33,56 @@ class TodoListApiView(APIView):
             serializer.save()
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_404_BAD_REQUEST)
+
+"""" Detail View """
+class TodoDetailViewApi(APIView):
     
+    def get_object(self,request,todo_id,user_id):
+        """"
+        Helper method that gets an object given todo id and user id
+        """
+        try:
+            return Todo.objects.get(id=todo_id,user=user_id)
+        except Todo.DoesNotExist:
+            return None
+    
+    # 3. Retrieve
+    def get(self, request,todo_id):
+        """"
+        Retrieves all todos with a given todo_id
+        """
+        todo_instance = self.get_object(todo_id,request.user.id)
+        if not todo_instance:
+            return Response({'res':"Object with the todo id does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        serializer = TodoSerializer(todo_instance)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    # 4. Update
+    def put(self,request,todo_id):
+        """"
+        Edits item todo with given todo_id if exists
+        """
+        todo_instance = self.get_object(todo_id,request.user.id)
+        if not todo_instance:
+            return Response({'res':"Object with the todo id does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        data = {
+            'task':request.data.get('task'),
+            'completed':request.data.get('completed'),
+            'user':request.user.id
+        }
+        serializer = TodoSerializer(instance=todo_instance,data=data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_200_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+    # 5. Delete
+    def delete(self,request,todo_id):
+        """
+        Destroy a todo item if exists given its todo id
+        """
+        todo_instance = self.get_object(todo_id,request.user.id)
+        if not todo_instance:
+            return Response({'res':"Object with the todo id does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        todo_instance.delete()
+        return Response({'res':"Object deleted!"},status=status.HTTP_200_OK)
