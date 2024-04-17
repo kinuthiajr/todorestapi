@@ -31,13 +31,15 @@ class TodoListApiView(APIView):
         serializer = TodoSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
+            return Response(serializer.data,status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_404_BAD_REQUEST)
 
 """" Detail View """
 class TodoDetailViewApi(APIView):
-    
-    def get_object(self,request,todo_id,user_id):
+     # permissions to check if user is authenticated
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self,todo_id,user_id):
         """"
         Helper method that gets an object given todo id and user id
         """
@@ -47,7 +49,7 @@ class TodoDetailViewApi(APIView):
             return None
     
     # 3. Retrieve
-    def get(self, request,todo_id):
+    def get(self, request,todo_id,*args,**kwargs):
         """"
         Retrieves all todos with a given todo_id
         """
@@ -58,7 +60,7 @@ class TodoDetailViewApi(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     # 4. Update
-    def put(self,request,todo_id):
+    def put(self,request,todo_id,*args,**kwargs):
         """"
         Edits item todo with given todo_id if exists
         """
@@ -73,11 +75,11 @@ class TodoDetailViewApi(APIView):
         serializer = TodoSerializer(instance=todo_instance,data=data,partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,status=status.HTTP_200_CREATED)
+            return Response(serializer.data,status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
     # 5. Delete
-    def delete(self,request,todo_id):
+    def delete(self,request,todo_id,*args,**kwargs):
         """
         Destroy a todo item if exists given its todo id
         """
